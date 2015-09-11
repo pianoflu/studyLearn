@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="VBoxService" default="CxfWSDL2Java" basedir=".">
+	<property name="dist" value="dist" />
+	<property name="srcmain" value="src" />
+	<property name="classes" value="WebContent/WEB-INF/classes" />
+	<property name="jar.root" value="WebContent/WEB-INF/lib" />
+
+	<property name="cxf.home" location="E:\apache-cxf-2.7.5" />
+	<property name="service.url" value="http://localhost:8080/VBoxService/webservice" />
+
+	<path id="master-classpath">
+		<fileset dir="${jar.root}">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+	<path id="cxf.classpath">
+		<fileset dir="${cxf.home}/lib">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+
+	<target name="clear">
+		<delete dir="${dist}" />
+	</target>
+
+	<target name="build" depends="clear">
+		<delete dir="${classes}" />
+		<mkdir dir="${classes}" />
+		<javac srcdir="${srcmain}" destdir="${classes}" includeantruntime="on" encoding="UTF-8">
+			<classpath refid="master-classpath" />
+		</javac>
+	</target>
+
+	
+	<target name="CxfWSDL2Java" depends="build">
+		<delete dir="${cxf.home}/bin/src" />
+		<delete dir="${cxf.home}/bin/classes" />
+		<mkdir dir="${cxf.home}/bin/src" />
+		<mkdir dir="${cxf.home}/bin/classes" />
+		<mkdir dir="${dist}" />
+		<delete dir="${dist}/vboxservice.jar"/>
+		<!-- 新增模块后，新增下面节点内容 -->
+		<java classname="org.apache.cxf.tools.wsdlto.WSDLToJava" fork="true">
+			<arg value="-d" />
+			<arg value="${cxf.home}/bin/src" />
+			<arg value="-encoding" />
+			<arg value="UTF-8" />
+			<arg value="${service.url}/cloneVm?wsdl" />
+			<classpath>
+				<path refid="cxf.classpath" />
+			</classpath>
+		</java>
+		
+		<java classname="org.apache.cxf.tools.wsdlto.WSDLToJava" fork="true">
+			<arg value="-d" />
+			<arg value="${cxf.home}/bin/src" />
+			<arg value="-encoding" />
+			<arg value="UTF-8" />
+			<arg value="${service.url}/startVm?wsdl" />
+			<classpath>
+				<path refid="cxf.classpath" />
+			</classpath>
+		</java>
+		
+		<java classname="org.apache.cxf.tools.wsdlto.WSDLToJava" fork="true">
+			<arg value="-d" />
+			<arg value="${cxf.home}/bin/src" />
+			<arg value="-encoding" />
+			<arg value="UTF-8" />
+			<arg value="${service.url}/closeVm?wsdl" />
+			<classpath>
+				<path refid="cxf.classpath" />
+			</classpath>
+		</java>
+		
+		<java classname="org.apache.cxf.tools.wsdlto.WSDLToJava" fork="true">
+			<arg value="-d" />
+			<arg value="${cxf.home}/bin/src" />
+			<arg value="-encoding" />
+			<arg value="UTF-8" />
+			<arg value="${service.url}/destoryVm?wsdl" />
+			<classpath>
+				<path refid="cxf.classpath" />
+			</classpath>
+		</java>
+		
+		<java classname="org.apache.cxf.tools.wsdlto.WSDLToJava" fork="true">
+					<arg value="-d" />
+					<arg value="${cxf.home}/bin/src" />
+					<arg value="-encoding" />
+					<arg value="UTF-8" />
+					<arg value="${service.url}/resetVm?wsdl" />
+					<classpath>
+						<path refid="cxf.classpath" />
+					</classpath>
+				</java>
+		
+
+		<!-- 不要修改下面 -->
+		<javac srcdir="${cxf.home}/bin/src" destdir="${cxf.home}/bin/classes" includeantruntime="on" encoding="UTF-8">
+			<classpath refid="cxf.classpath" />
+		</javac>
+		<copy todir="${cxf.home}/bin/classes">
+			<fileset dir="${cxf.home}/bin/src">
+			</fileset>
+		</copy>
+		<jar jarfile="${dist}/vboxservice.jar" basedir="${cxf.home}/bin/classes" />
+
+	</target>
+
+</project>

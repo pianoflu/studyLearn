@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="wang.xuezuo.dao.ResourceCommonDao">
+  <select id="getUsedMemory" resultType="java.lang.Integer" >
+  	 select sum(a.memory+b.memory) from
+     (select sum(memory) memory from vmimg)a,
+     (select sum(memory) memory from vminstance)b
+  </select>
+  
+  <select id="getUsedDisk" resultType="java.lang.Integer" >
+  	 select sum(a.disk+b.disk) from
+     (select sum(disk) disk from vmimg)a,
+     (select sum(disk) disk from vminstance)b
+  </select>
+  
+  <select id="getHostInfo" resultType="wang.xuezuo.domain.Host" >
+  	 select * from host
+  </select>
+  
+  <select id="getVmimgInfo" resultType="wang.xuezuo.domain.Vmimg" >
+  	 select * from vmimg where courseId = #{courseId}
+  </select>
+  
+  <select id="ifUserExistVm" resultType="wang.xuezuo.domain.Vminstance" >
+  	 select * from vminstance where userId = #{userId}
+  </select> 
+  
+  <select id="getVmOperateTime" resultType="java.util.Date">
+  	 select operateTime from vminstance where uuid = #{uuid}
+  </select> 
+  
+  <select id="ifModelVmCanUse" resultType="java.lang.Integer">
+  	 select status from vmimg where courseId = #{courseId}
+  </select>
+  
+</mapper>
