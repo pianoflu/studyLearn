@@ -31,23 +31,25 @@ public class ResetVmServiceImpl implements ResetVmService {
 		logger.info("uuid:"+uuid+"执行resetVm方法");
 		JSONObject jsonObject = new JSONObject();
 		// 连接虚拟机webservice
+		logger.info("开始连接webservice");
 		VirtualBoxManager mgr = VirtualBoxManager.createInstance(null);
 		IVirtualBox vbox = null;
 		try {
 			vbox = VboxCommon.connectVm(mgr);
+			logger.info("成功连接webservice");
 		} catch (VBoxException e) {
 			logger.error("虚拟机webserver未开启");
 			jsonObject.put("error", "服务器出错");
 		}
 		// 重启操作
+		logger.info("开始重启uuid"+uuid);
 		try {
-			if (vbox != null) {
-				IMachine machine = vbox.findMachine(uuid);
-				if (machine.getState() == MachineState.PoweredOff) {
-					jsonObject.put("error", "资源未开启");
-				} else {
-					VboxCommon.resetVm(mgr, machine);
-				}
+			IMachine machine = vbox.findMachine(uuid);
+			if (machine.getState() == MachineState.PoweredOff) {
+				jsonObject.put("error", "资源未开启");
+			} else {
+				VboxCommon.resetVm(mgr, machine);
+				logger.info("成功重启uuid"+uuid);
 			}
 		} catch (VBoxException e) {
 			logger.error(uuid+":VBoxException error: " + e.getMessage() + ".Error cause: " + e.getCause());
@@ -57,8 +59,10 @@ public class ResetVmServiceImpl implements ResetVmService {
 			jsonObject.put("error", "重启资源失败");
 		}
 		// 释放连接
+		logger.info("开始释放webservice连接...");
 		try {
 			VboxCommon.disconnectVm(mgr);
+			logger.info("成功释放webservice连接...");
 		} catch (VBoxException e) {
 			logger.error("释放连接失败: " + e.getMessage());
 		}

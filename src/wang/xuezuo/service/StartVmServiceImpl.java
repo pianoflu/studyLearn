@@ -42,33 +42,37 @@ public class StartVmServiceImpl implements StartVmService {
 	public JSONObject startVm(String uuid) {
 		logger.info(uuid+"开始启动虚拟机");
 		JSONObject jsonObject = new JSONObject();
+		logger.info("判断系统资源是否足够开启虚拟机");
 		if (ifCanStartVm()) {
 			// 连接虚拟机webservice
+			logger.info("系统资源足够，能够开启虚拟机");
+			logger.info("开始连接webservice");
 			VirtualBoxManager mgr = VirtualBoxManager.createInstance(null);
 			IVirtualBox vbox = null;
 			try {
 				vbox = VboxCommon.connectVm(mgr);
+				logger.info("成功连接webservice");
 			} catch (VBoxException e) {
 				logger.error("虚拟机webserver未开启");
 				jsonObject.put("error", "服务器出错");
 			}
 			// 开启虚拟机
+			logger.info("开始开启虚拟机"+uuid);
 			try {
-				if (vbox != null) {
 					IMachine m = vbox.findMachine(uuid);
 					if (m.getState() == MachineState.Running) {
+						logger.error("您的资源已开启");
 						jsonObject.put("error", "您的资源已开启");
 					} else {
 						String ip = VboxCommon.startVm(mgr, m);
-						logger.info(uuid+":ip为"+ip);
 						if (ip == null || "".equals(ip)) {
+							logger.error("不能打开资源，资源可能不可用");
 							jsonObject.put("error", "打开资源失败");
 						} else {
 							jsonObject.put("ip", ip);
-							// 可能需要VM里VNC的端口号和密码，不确定
+							logger.info("成功开启虚拟机"+uuid+".ip为"+ip);
 						}
 					}
-				}
 			} catch (VBoxException e) {
 				logger.error(uuid+":VBoxException error: " + e.getMessage() + ".Error cause: " + e.getCause());
 				jsonObject.put("error", "打开资源失败");
@@ -77,19 +81,24 @@ public class StartVmServiceImpl implements StartVmService {
 				jsonObject.put("error", "打开资源失败");
 			}
 			//释放连接
+			logger.info("开始释放webservice连接...");
 			try {
 				VboxCommon.disconnectVm(mgr);
+				logger.info("成功释放webservice连接...");
 	        } catch (VBoxException e) {
 	        	logger.error(uuid+":释放连接失败: " + e.getMessage());
 	        }
 			// 更新虚拟机的状态 0：关闭，1：已启动
+			logger.info("开始更改数据库中虚拟机状态.status设为1");
 			try {
 				startVmDao.updateVmStatus(1, uuid);
+				logger.info("成功更改数据库中虚拟机状态.");
 			} catch (Exception e) {
 				logger.error(uuid+":更新虚拟机状态失败: " + e.getMessage());
 			}
 		} else {
 			jsonObject.put("error", "对不起，服务器资源不足");
+			logger.info("服务器资源不足，不能开启");
 		}
 		logger.info(uuid+"结束调用startVm");
 		return jsonObject;

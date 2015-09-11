@@ -41,29 +41,34 @@ public class CloneVmServiceImpl implements CloneVmService {
 
 	@Override
 	public JSONObject cloneVm(int userId, int courseId) {
-		logger.info("userId:"+userId+"申请资源,"+"courseId:"+courseId);
+		logger.info("userId:"+userId+"申请资源,"+"courseId:"+courseId+"。进入clone方法");
 		JSONObject jsonObject = new JSONObject();
 		Vmimg vmimg = resourceCommonDao.getVmimgInfo(courseId);
 
-		if (!ifUserExistVm(userId)) {
+		if (!ifUserExistVm(userId)) {//这里只是对用户是否开启了虚拟机进行的检测
+			logger.info("用户"+userId+"可以新建虚拟机");
 			if(resourceCommonDao.ifModelVmCanUse(courseId) == 1){
+				logger.info("课程"+courseId+"的虚拟机模型能够使用");
 				if (ifCanCloneVm(courseId)) {
+					logger.info("课程"+courseId+"的虚拟机模板可以进行克隆");
 					// 连接虚拟机webservice
+					logger.info("开始连接webservice");
 					VirtualBoxManager mgr = VirtualBoxManager.createInstance(null);
 					IVirtualBox vbox = null;
 					try {
 						vbox = VboxCommon.connectVm(mgr);
+						logger.info("连接webservice成功");
 					} catch (VBoxException e) {
 						logger.error("虚拟机webserver未开启");
 						jsonObject.put("error", "服务器出错");
 					}
 					// 克隆操作
 					String newVmName = createNewVmName(userId, courseId);
+					logger.info("开始进行clone操作，clone后的虚拟机名称为"+newVmName);
 					String uuid = null;
 					try {
-						if (vbox != null) {
-							uuid = VboxCommon.cloneVm(mgr, vbox, vmimg.getName(), newVmName);
-						}
+						uuid = VboxCommon.cloneVm(mgr, vbox, vmimg.getName(), newVmName);
+						logger.info("结束clone操作，虚拟机uuid为"+uuid);
 					} catch (VBoxException e) {
 						logger.error(uuid+":VBoxException error: " + e.getMessage() + ".Error cause: " + e.getCause());
 						VboxCommon.deleteCloneVm(mgr, vbox, newVmName);
@@ -74,12 +79,16 @@ public class CloneVmServiceImpl implements CloneVmService {
 						jsonObject.put("error", "申请资源失败");
 					}
 					//释放连接
+					logger.info("开始释放webservice连接...");
 					try {
 						VboxCommon.disconnectVm(mgr);
+						logger.info("释放webservice完成");
 			        } catch (VBoxException e) {
 			        	logger.error(uuid+":释放连接失败: " + e.getMessage());
 			        }
+					
 					// 数据库操作
+					logger.info("开始将clone后的虚拟机数据存入数据库...");
 					try {
 						Vminstance cloneInfo = new Vminstance();
 						cloneInfo.setUserId(userId);
@@ -94,6 +103,7 @@ public class CloneVmServiceImpl implements CloneVmService {
 						cloneVmDao.addVminstanceInfo(cloneInfo);
 						jsonObject.put("uuid", uuid);
 						jsonObject.put("vmname", newVmName);
+						logger.info("成功将clone后的虚拟机数据存入数据库...");
 					} catch (Exception e) {
 						logger.error(uuid+":克隆数据存入数据库失败: " + e.getMessage());
 						VboxCommon.deleteCloneVm(mgr, vbox, newVmName);
@@ -105,8 +115,8 @@ public class CloneVmServiceImpl implements CloneVmService {
 					logger.info("userId:"+userId+"服务器资源不足");
 				}
 			}else{
-				jsonObject.put("error", "该资源不可用");
-				logger.info("userId:"+userId+"虚拟机模板不可用");
+				jsonObject.put("error", "该资源不可用或不存在");
+				logger.info("userId:"+userId+"虚拟机模板不可用或不存在");
 			}
 		} else {
 			jsonObject.put("error", "您已申请过课程");
