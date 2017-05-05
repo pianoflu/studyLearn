@@ -105,7 +105,7 @@
 			</fileset>
 		</copy>
 		<jar jarfile="${dist}/vboxservice.jar" basedir="${cxf.home}/bin/classes" />
-                <jar jarfile="${dist}/vboxservice.jar" basedir="${cxf.home}/bin/classes" />
+
 	</target>
 
 </project>
